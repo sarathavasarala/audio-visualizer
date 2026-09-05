@@ -1,0 +1,67 @@
+# ==============================================================================
+# AUDIO & MEDIA PRIVACY - STRICTLY IGNORED
+# Personal and copyrighted audio recordings must never be tracked in git
+# ==============================================================================
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.aac
+*.ogg
+*.opus
+*.wma
+*.aiff
+
+# Generated video outputs
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+
+# Temporary assets & frames
+*.png
+*.jpg
+*.jpeg
+!templates/*.jpg
+!templates/*.png
+!assets/*.jpg
+!assets/*.png
+
+# Python environment & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
