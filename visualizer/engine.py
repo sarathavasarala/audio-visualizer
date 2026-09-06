@@ -17,11 +17,19 @@ def render_visualizer_video(
     fps=30,
     num_bars=64,
     disc_radius=260,
-    progress_callback=None
+    progress_callback=None,
+    motion_config=None
 ):
     """
     Renders an audio-reactive visualizer video streamed directly into FFmpeg.
     """
+    # 0. Validation
+    if not isinstance(fps, (int, float)) or fps < 1 or fps > 120:
+        raise ValueError(f"Invalid fps: {fps}. Supported frame rate is between 1 and 120.")
+
+    if not isinstance(num_bars, int) or num_bars < 16 or num_bars > 256:
+        raise ValueError(f"Unsupported bar count: {num_bars}. Supported bar count is between 16 and 256.")
+
     # 1. Dimensions
     if aspect == "1:1":
         width, height = 1080, 1080
@@ -32,7 +40,9 @@ def render_visualizer_video(
 
     # 2. Audio Processing
     samples, sr = load_audio(audio_path)
-    bar_heights, rms_levels, duration = analyze_audio(samples, sr, fps=fps, num_bars=num_bars)
+    bar_heights, rms_levels, duration = analyze_audio(
+        samples, sr, fps=fps, num_bars=num_bars, config=motion_config
+    )
     total_frames = int(duration * fps)
 
     # 3. Canvas & Vinyl Preparation

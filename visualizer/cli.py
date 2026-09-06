@@ -22,6 +22,14 @@ def main():
         print(f"Error: Input audio file not found: {args.audio}", file=sys.stderr)
         sys.exit(1)
 
+    if args.fps < 1 or args.fps > 120:
+        print(f"Error: Invalid FPS: {args.fps}. Supported frame rate is between 1 and 120.", file=sys.stderr)
+        sys.exit(1)
+
+    if args.bars < 16 or args.bars > 256:
+        print(f"Error: Unsupported bar count: {args.bars}. Supported bar count is between 16 and 256.", file=sys.stderr)
+        sys.exit(1)
+
     if args.bg and not os.path.exists(args.bg):
         print(f"Warning: Background file not found: {args.bg}. Falling back to default canvas.", file=sys.stderr)
         args.bg = None
@@ -36,17 +44,21 @@ def main():
             pct = (curr / total) * 100.0
             print(f"Progress: {curr}/{total} frames ({pct:.1f}%)", flush=True)
 
-    out = render_visualizer_video(
-        audio_path=args.audio,
-        output_path=args.output,
-        bg_path=args.bg,
-        title=args.title,
-        subtitle=args.subtitle,
-        aspect=args.aspect,
-        fps=args.fps,
-        num_bars=args.bars,
-        progress_callback=on_progress
-    )
+    try:
+        out = render_visualizer_video(
+            audio_path=args.audio,
+            output_path=args.output,
+            bg_path=args.bg,
+            title=args.title,
+            subtitle=args.subtitle,
+            aspect=args.aspect,
+            fps=args.fps,
+            num_bars=args.bars,
+            progress_callback=on_progress
+        )
+    except (ValueError, FileNotFoundError, RuntimeError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     print(f"\nSuccess! Video generated at: {out}")
 

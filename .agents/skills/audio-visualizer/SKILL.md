@@ -12,11 +12,14 @@ Use this skill when a user provides an audio file (song, vocal cover, instrument
 ## Autonomous Workflow
 
 ### Step 1: Input Intake & Track Profiling
-1. Identify the input audio file path (either uploaded via chat or located on disk).
-2. Extract or clarify basic track metadata:
-   - **Title**: Song name or project title (in uppercase wide tracking).
-   - **Subtitle**: Subtitle or credit (e.g. "TITLE COVER", "ACOUSTIC COVER", or artist name).
-   - **Aspect Ratio**: Default to `9:16` (1080×1920) for Instagram Reels/Stories, or `1:1` (1080×1080) if requested for feed posts.
+1. **Audio File Path**:
+   - Verify that an audio file path has been provided or uploaded.
+   - If not provided, ask the user for the audio file path or upload before proceeding.
+2. **Metadata & Styling Preferences**:
+   - Clarify or confirm the following with the user before generating:
+     - **Title**: Song name or project title (formatted in uppercase with elegant wide tracking).
+     - **Subtitle**: **Strictly optional**. Explicitly confirm if the user wants an artist name or cover credit, or prefers a **clean title-only** visual (often preferred for minimal/cinematic aesthetic). Never invent or guess an unrequested subtitle.
+     - **Aspect Ratio**: Default to `9:16` (1080×1920) for Instagram Reels/Stories, or `1:1` (1080×1080) if requested for feed posts.
 
 ### Step 2: Atmospheric Art Conception via Gemini
 1. Analyze the song's genre, emotional mood, and lyrical themes (e.g., romantic, soulful, rainy twilight, neon lo-fi, warm acoustic, ambient indie).
@@ -33,13 +36,19 @@ python -m visualizer.cli \
   --audio "/path/to/input.mp3" \
   --bg "/path/to/generated_bg.jpg" \
   --title "SONG TITLE" \
-  --subtitle "ARTIST OR COVER" \
+  --subtitle "" \
   --aspect "9:16" \
   --output "output_video.mp4"
 ```
+*(Omit `--subtitle` or pass `""` if title-only is preferred).*
 
 #### Under the Hood:
-- **Audio Processing**: Decodes to 44.1kHz float32 mono; computes 4096-point FFT with centered zero-padded windows; applies track-wide 98th-percentile dynamic normalization and musical attack/decay smoothing.
+- **Organic Bar Motion Engine**:
+  - **Shared Breathing & Local Detail**: Blends a 65% broadband loudness envelope with 35% local spectral ripple detail so the entire ring pulses unified with the rhythm.
+  - **Circular Frequency Mixture Distribution**: Overlapping multi-harmonic distribution ensures no quadrant is exclusively locked to bass or treble.
+  - **Circular Spatial Smoothing**: Gaussian filtering with `mode='wrap'` eliminates visible seams between bar 0 and bar $N-1$.
+  - **Framerate-Independent Dynamics**: Physical exponential attack (60 ms) and release (220 ms) time constants ensure identical motion across 30 fps, 60 fps, etc.
+  - **Gentle Capped Balancing & Soft Saturation**: Per-band reference tracking with noise gate (-55 dBFS) and smooth tanh saturation prevents noise amplification and hard peak flattening.
 - **Solid Physical Vinyl**: Renders opaque micro-grooves (preventing background bleed-through) and a central rotating label with gold spoke accents.
 - **Stationary Sheen**: Keeps specular lighting highlights anchored in camera space while the vinyl rotates underneath.
 - **Luminous Bloom**: Adds a 30% alpha Gaussian light spill behind the 4px pill-cap bars to tie them into the background.
