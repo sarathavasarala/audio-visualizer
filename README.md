@@ -1,112 +1,102 @@
 # 🎵 Audio Visualizer
 
-An intelligent, audio-reactive video generator that transforms audio tracks, vocal covers, podcasts, and beats into high-craft, cinematic videos ready for **Instagram Reels (9:16)**, **Stories**, and **Feed Posts (1:1)**.
+> **Drop an audio file to your AI agent. Get a bespoke, Instagram-ready video in seconds.**
 
-Renders an authentic, spinning vinyl record surrounded by fluid waveform bars that organically breathe with the music, set against bespoke atmospheric backgrounds with studio specular lighting and luminous bloom.
+Turn your songs, acoustic covers, beats, podcast snippets, and voice memos into aesthetic, cinema-grade social videos without opening video editing software.
 
----
-
-## ✨ Key Features
-
-- **Organic Breathing Bar Motion**: Blends a 65% broadband loudness envelope with 35% local spectral ripple detail. The entire ring breathes unified with the beat while local frequency variations dance across it.
-- **Multi-Harmonic Circular Distribution**: Overlapping frequency mixtures distribute bass, midrange, and treble across the circle so no quadrant exclusively locks to bass or treble, eliminating top over-reactivity and bottom dormancy.
-- **Continuous Circular Smoothing**: Gaussian spatial filtering across adjacent bars with periodic boundary wrapping (`mode='wrap'`) ensures zero visible seams and no rigid mirrored halves.
-- **Framerate-Independent Dynamics**: Physical exponential attack ($\tau_{\text{attack}} = 60\text{ ms}$) and release ($\tau_{\text{release}} = 220\text{ ms}$) time constants ensure identical motion curves at 30 fps, 60 fps, or 120 fps.
-- **Capped Frequency Balancing & Soft Saturation**: Per-band reference tracking with a noise floor gate ($-55\text{ dBFS}$) and smooth $\tanh$ compression preserves dynamic headroom during loud peaks without flat ceilings or hiss amplification.
-- **Physical Vinyl Disc**: Opaque micro-grooved record body with rotating obsidian/amber center label and delicate gold spoke accents.
-- **Stationary Specular Sheen**: Studio lighting highlights remain fixed in world-space while the physical vinyl rotates underneath.
-- **Luminous Bloom & Distance Vignette**: 30% alpha Gaussian bloom behind 4px pill-cap bars and a mathematical distance power vignette focusing attention on the center disc.
-- **Direct FFmpeg Stream**: Pipes raw frames directly to FFmpeg stdin to encode H.264 High Profile (`yuv420p`) + 320 kbps AAC with `faststart` (zero intermediate frame files on disk).
+Just drop your MP3 or WAV to your AI agent, and it handles everything:
+1. **Listens to the vibe** — Analyzes the song's genre, emotional mood, and lyrics.
+2. **Conjures bespoke cover art** — Generates atmospheric, cinematic artwork tailored to your track.
+3. **Spins the vinyl** — Renders an authentic physical record with audio-reactive bars that breathe with the music.
+4. **Delivers the video** — Hands you a high-definition, vertical video ready to post straight to Instagram Reels, Stories, or TikTok.
 
 ---
 
-## 🚀 Quickstart
+## 🎧 The Experience
 
-### 1. Prerequisites
+Most audio visualizers feel sterile, jittery, or locked to generic templates. This visualizer is crafted to look and feel like high-end music cinematography:
 
-Ensure [FFmpeg](https://ffmpeg.org) is installed on your system:
+- **Organic Breathing Motion** — The whole ring pulses and breathes naturally with the rhythm and bass, with delicate ripples reflecting the melody and vocals.
+- **Physical Vinyl Record** — Authentic grooved vinyl texture with a rotating center label, gold spoke accents, and stationary studio lighting that stays fixed while the record spins.
+- **Atmospheric Artwork** — Bespoke visual moods (warm amber dusk, moody midnight rain, neon lo-fi, vintage film grain) generated to match your music.
+- **Clean Aesthetic Typography** — Elegant serif title styling that keeps the focus entirely on your music.
+- **Platform-Ready** — Formatted perfectly in vertical **9:16** for Reels/Stories or **1:1** square for feed posts, encoded in crisp 1080p with studio-quality audio.
 
+---
+
+## 🪄 How to Use
+
+### Option 1: With Your AI Agent (Recommended)
+
+If you're using Google Antigravity or any agent equipped with this skill, you don't need to run any code:
+
+1. **Drop your audio file** into the chat (`.mp3`, `.wav`, `.m4a`).
+2. Say something like:
+   > *"Make an aesthetic 9:16 visualizer for this song."*
+3. The agent will confirm your song title, generate matching cover art, render the spinning vinyl, and hand you the finished MP4!
+
+---
+
+### Option 2: Run via CLI
+
+Prefer running it from your terminal? It’s a single command:
+
+#### 1. Setup
 ```bash
-# macOS (via Homebrew)
+# Install FFmpeg (required for video rendering)
 brew install ffmpeg
 
-# Ubuntu / Debian
-sudo apt-get install ffmpeg
-```
-
-### 2. Installation
-
-Clone the repository and install the Python dependencies:
-
-```bash
-git clone https://github.com/sarathavasarala/audio-visualizer.git
-cd audio-visualizer
+# Install Python requirements
 pip install -r requirements.txt
 ```
 
-### 3. Generate a Video
-
-Run via the CLI:
-
+#### 2. Generate
 ```bash
-# Clean minimal title (9:16 Instagram Reel)
+# Minimal, clean title (9:16 vertical for Instagram Reels)
 python -m visualizer.cli \
-  --audio "path/to/song.wav" \
-  --bg "path/to/background.jpg" \
+  --audio "my_song.mp3" \
+  --bg "my_artwork.jpg" \
   --title "SONG TITLE" \
   --aspect "9:16" \
-  --output "output.mp4"
+  --output "visualizer.mp4"
 ```
 
 ```bash
-# With artist/cover subtitle (1:1 Feed Post)
+# Square format with artist credit (1:1 for Feed posts)
 python -m visualizer.cli \
-  --audio "path/to/song.mp3" \
-  --bg "path/to/background.jpg" \
+  --audio "my_song.wav" \
+  --bg "my_artwork.jpg" \
   --title "SONG TITLE" \
-  --subtitle "ARTIST OR COVER" \
+  --subtitle "ARTIST NAME" \
   --aspect "1:1" \
-  --fps 30 \
-  --bars 64 \
-  --output "output_square.mp4"
+  --output "feed_post.mp4"
 ```
 
----
-
-## ⚙️ CLI Options
-
-| Flag | Description | Default |
-| :--- | :--- | :--- |
-| `--audio`, `-a` | Path to input audio file (`.mp3`, `.wav`, `.m4a`, `.flac`, etc.) | *Required* |
-| `--output`, `-o` | Destination MP4 path | `output.mp4` |
-| `--bg`, `-b` | Path to background image | `None` (dark gradient) |
-| `--title`, `-t` | Song or project title (uppercase tracked serif) | `""` |
-| `--subtitle`, `-s` | Subtitle / artist / credit line (optional, omit for clean look) | `""` |
-| `--aspect` | Aspect ratio (`9:16` for vertical, `1:1` for square) | `9:16` |
-| `--fps` | Video framerate ($1 \le \text{fps} \le 120$) | `30` |
-| `--bars` | Number of radial wave bars ($16 \le \text{bars} \le 256$) | `64` |
+#### CLI Options:
+- `--audio`, `-a`: Path to your audio file (`.mp3`, `.wav`, `.m4a`, etc.) *(Required)*
+- `--output`, `-o`: Where to save the video (default: `output.mp4`)
+- `--bg`, `-b`: Path to a background image (optional, defaults to an elegant dark gradient)
+- `--title`, `-t`: Song name displayed in tracked uppercase serif
+- `--subtitle`, `-s`: Subtitle or artist credit (optional; leave blank for a clean title-only look)
+- `--aspect`: Video format — `9:16` (Reels/Stories) or `1:1` (Feed)
+- `--fps`: Frame rate (default: `30`)
+- `--bars`: Number of radial waveform bars (default: `64`)
 
 ---
 
-## 🎛️ Tunable Motion Parameters
+## 🎛️ Customizing the Motion
 
-Motion shaping is modularized in [`visualizer/motion.py`](visualizer/motion.py) and centralized in `MotionConfig`:
+Want to dial in how reactive the bars are? All motion physics are centralized in [`visualizer/motion.py`](visualizer/motion.py) via `MotionConfig`:
 
 ```python
 from visualizer import render_visualizer_video, MotionConfig
 
+# Customize the feel
 config = MotionConfig(
-    shared_weight=0.65,          # 65% broadband breathing / 35% local ripple
-    detail_weight=0.35,
-    attack_sec=0.060,            # 60ms rise time constant (snappy & reactive)
-    release_sec=0.220,           # 220ms decay time constant (smooth release)
-    min_freq=45.0,               # Lower analysis frequency (Hz)
-    max_freq=11000.0,            # Upper analysis frequency (Hz)
-    baseline_height=6.0,         # Resting bar height in pixels (silence)
-    max_height=78.0,             # Maximum bar height in pixels
-    spatial_smoothing_sigma=1.2, # Circular smoothing across neighbor bars
-    saturation_strength=1.2,     # Soft tanh compression curvature
-    noise_floor_db=-55.0         # Noise gate floor (dBFS)
+    shared_weight=0.65,    # 65% shared breathing / 35% local ripples
+    attack_sec=0.060,      # Snappy rise time (60ms)
+    release_sec=0.220,     # Smooth, musical decay (220ms)
+    saturation_strength=1.2 # Soft saturation prevents harsh clipping on loud drops
 )
 
 render_visualizer_video(
@@ -120,7 +110,7 @@ render_visualizer_video(
 
 ## 🧪 Testing
 
-The repository includes a comprehensive unit test suite covering silence baseline return, bounded heights, low/high tone circular breathing, seamless wrapping, 30 vs 60 fps timing consistency, dynamic headroom, and end-to-end video synthesis:
+Run the automated test suite verifying baseline silence return, dynamic headroom, and framerate consistency:
 
 ```bash
 python -m unittest discover tests
@@ -128,17 +118,6 @@ python -m unittest discover tests
 
 ---
 
-## 🤖 Antigravity AI Skill Integration
+## 🔒 Privacy
 
-This project includes a native `SKILL.md` for Google Antigravity. When invoked within an AI-assisted environment, the agent can:
-1. Intake audio and clarify title, optional subtitle, and aspect ratio.
-2. Analyze the song's musical mood, genre, and lyrical themes.
-3. Automatically generate bespoke, atmospheric 9:16 artwork via Gemini.
-4. Execute the visualizer engine and deliver the finished, Instagram-ready MP4.
-
----
-
-## 📄 License & Privacy
-
-- Audio and generated video outputs are strictly excluded from version control via `.gitignore`.
-- Built for musicians, podcasters, creators, and audio engineers.
+All personal audio recordings, temporary assets, and rendered video outputs are strictly excluded from git tracking via `.gitignore`. Your music stays on your machine.
