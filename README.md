@@ -38,6 +38,7 @@ Extract studio-quality karaoke backing tracks and pitch-shift them to match your
 - **UVR AI Stem Separation** — Separates clean instrumental backing and isolated vocals using Ultimate Vocal Remover models via `audio-separator`.
 - **Pitch Adaptation** — Shifts keys (e.g. `-2`, `-4` semitones) with pristine quality using FFmpeg `librubberband` without altering tempo.
 - **Time-Range Trimming** — Isolates specific song sections (e.g. verse + chorus) for vocal practice.
+- **Automated Asset Bundling** — Automatically exports source audio, trimmed audio, isolated vocals, original key instrumental, and all pitch-shifted variations into `~/Downloads/<Song_Title>_Karaoke/`.
 
 #### Quick Agent Prompt:
 > *"Turn this song into a karaoke track with -2 and -4 semitone versions for my range: `https://www.youtube.com/watch?v=...`"*

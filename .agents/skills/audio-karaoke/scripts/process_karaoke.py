@@ -116,7 +116,7 @@ def download_or_prepare_audio(input_source: str, start_sec: float | None, end_se
 
     print("[*] Trimming and converting source audio to 44.1kHz WAV...")
     run_cmd(ffmpeg_cmd, "FFmpeg trimming failed")
-    return prepared_wav, track_title
+    return prepared_wav, source_audio, track_title
 
 
 def separate_vocals(input_wav: Path, work_dir: Path, model_name: str | None = None) -> tuple[Path, Path]:
@@ -201,13 +201,14 @@ def pitch_shift_track(instrumental_wav: Path, semitones: int, output_mp3: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Autonomous YouTube Karaoke & Pitch Shift Pipeline")
+    parser = argparse.ArgumentParser(description="Autonomous Audio Karaoke & Pitch Shift Pipeline")
     parser.add_argument("--input", "-i", required=True, help="YouTube URL or local audio/video file path")
     parser.add_argument("--start", "-s", default=None, help="Start time (e.g., '58', '00:58')")
     parser.add_argument("--end", "-e", default=None, help="End time (e.g., '2:20', '02:20')")
     parser.add_argument("--shifts", default="-2,-4", help="Comma-separated semitone shifts, e.g. '-2,-4' (2 curated versions for 110-240Hz range)")
     parser.add_argument("--model", default=None, help="UVR Model name for audio-separator")
-    parser.add_argument("--output-dir", "-o", default=str(Path.home() / "Downloads"), help="Destination directory")
+    parser.add_argument("--output-dir", "-o", default=str(Path.home() / "Downloads"), help="Destination directory (a dedicated <Track_Title>_Karaoke folder will be created inside)")
+    parser.add_argument("--no-subfolder", action="store_true", help="Output directly to output-dir without creating a dedicated subfolder")
 
     args = parser.parse_args()
 
@@ -221,37 +222,66 @@ def main():
         if s:
             shift_list.append(int(s))
 
-    out_dir = Path(args.output_dir).expanduser().resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     with tempfile.TemporaryDirectory(prefix="karaoke_pipeline_") as temp_dir_str:
         work_dir = Path(temp_dir_str)
         print(f"[*] Working directory created: {work_dir}")
 
         # Step 1: Download & Trim
-        prepared_wav, track_title = download_or_prepare_audio(
+        prepared_wav, source_audio, track_title = download_or_prepare_audio(
             args.input, start_sec, end_sec, work_dir
         )
 
         time_tag = ""
-        if start_sec is not None or end_sec is not None:
+        is_trimmed = start_sec is not None or end_sec is not None
+        if is_trimmed:
             s_str = args.start or "0s"
             e_str = args.end or "end"
             time_tag = f"_[{s_str}-{e_str}]"
+
+        # Resolve common project output folder
+        base_out = Path(args.output_dir).expanduser().resolve()
+        folder_name = f"{track_title}_Karaoke"
+        if args.no_subfolder or base_out.name.lower() == folder_name.lower() or base_out.name.lower().endswith("_karaoke"):
+            common_dir = base_out
+        else:
+            common_dir = base_out / folder_name
+
+        common_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[+] All assets will be organized in common folder:\n    {common_dir}")
+
+        # Archive source audio in common folder
+        dest_source = common_dir / f"{track_title}_source.mp3"
+        print(f"[*] Archiving source audio to: {dest_source.name}")
+        if source_audio.suffix.lower() == ".mp3" and source_audio.exists() and source_audio.parent != common_dir:
+            shutil.copy2(source_audio, dest_source)
+        else:
+            run_cmd(["ffmpeg", "-y", "-i", str(source_audio), "-vn", "-c:a", "libmp3lame", "-q:a", "2", str(dest_source)])
+
+        # Archive trimmed audio if time cut was specified
+        dest_trimmed = None
+        if is_trimmed:
+            dest_trimmed = common_dir / f"{track_title}{time_tag}_trimmed.mp3"
+            print(f"[*] Archiving trimmed audio to: {dest_trimmed.name}")
+            run_cmd(["ffmpeg", "-y", "-i", str(prepared_wav), "-c:a", "libmp3lame", "-q:a", "2", str(dest_trimmed)])
 
         # Step 2: Separate Stems
         instrumental_wav, vocal_wav = separate_vocals(prepared_wav, work_dir, args.model)
         print(f"[+] Instrumental stem separated: {instrumental_wav.name}")
 
         # Save isolated vocals to destination for user reference
+        dest_vocals = None
         if vocal_wav and vocal_wav.exists():
-            dest_vocals = out_dir / f"{track_title}{time_tag}_(Vocals).mp3"
-            print(f"[*] Exporting isolated vocals to: {dest_vocals}")
+            dest_vocals = common_dir / f"{track_title}{time_tag}_(Vocals).mp3"
+            print(f"[*] Exporting isolated vocals to: {dest_vocals.name}")
             run_cmd(["ffmpeg", "-y", "-i", str(vocal_wav), "-c:a", "libmp3lame", "-q:a", "2", str(dest_vocals)])
 
         # Step 3: Multi-Key Pitch Shifting
+        all_shifts = list(shift_list)
+        if 0 not in all_shifts:
+            all_shifts.insert(0, 0)
+
         generated_files = []
-        for shift in shift_list:
+        for shift in all_shifts:
             if shift == 0:
                 tag = "Original_Key"
             elif shift > 0:
@@ -259,16 +289,23 @@ def main():
             else:
                 tag = f"{shift}_semitones"
 
-            dest_file = out_dir / f"{track_title}{time_tag}_(Karaoke)_{tag}.mp3"
+            dest_file = common_dir / f"{track_title}{time_tag}_(Karaoke)_{tag}.mp3"
             print(f"[*] Generating {tag} track: {dest_file.name}...")
             pitch_shift_track(instrumental_wav, shift, dest_file)
             generated_files.append((shift, dest_file))
 
         print("\n" + "=" * 60)
-        print("[+] SUCCESS! All karaoke tracks generated successfully:")
+        print(f"[+] SUCCESS! All assets organized in common directory:")
+        print(f"    {common_dir}")
+        print(f"  • Source audio:      {dest_source.name}")
+        if dest_trimmed:
+            print(f"  • Trimmed audio:     {dest_trimmed.name}")
+        if dest_vocals:
+            print(f"  • Isolated vocals:   {dest_vocals.name}")
         for shift, path in generated_files:
             sign = f"+{shift}" if shift > 0 else str(shift)
-            print(f"  • Shift {sign:>3} st: {path}")
+            label = "Original Key" if shift == 0 else f"Shift {sign:>3} st"
+            print(f"  • Karaoke ({label}): {path.name}")
         print("=" * 60)
 
 
