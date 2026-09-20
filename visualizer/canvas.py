@@ -60,18 +60,45 @@ def create_canvas(width=1080, height=1920, cx=540, cy=1030, bg_path=None, title=
 
     # Typography (only if title is provided)
     if title:
-        font_title = get_system_font(48, bold=True)
-        font_sub = get_system_font(19, bold=False)
-
         # In 9:16 vertical, place title above disc
         title_y = cy - 650 if height > width else cy - 420
-        sub_y = title_y + 65
+        sub_y = title_y + 60
 
-        draw_tracked_text(draw, title.upper(), cx, title_y, font_title, (248, 242, 234, 245), spacing=22)
+        # Auto-fit title to stay within safe margins (at least 80px on each side)
+        max_title_w = width - 160
+        title_size = 44
+        title_spacing = 18
+        while title_size > 22:
+            f_test = get_system_font(title_size, bold=True)
+            chars = list(title.upper())
+            char_widths = [draw.textbbox((0, 0), ch, font=f_test)[2] for ch in chars]
+            curr_w = sum(char_widths) + (len(chars) - 1) * title_spacing
+            if curr_w <= max_title_w:
+                break
+            title_size -= 2
+            title_spacing = max(6, int(18 * (title_size / 44)))
+
+        font_title = get_system_font(title_size, bold=True)
+        draw_tracked_text(draw, title.upper(), cx, title_y, font_title, (248, 242, 234, 245), spacing=title_spacing)
+
         if subtitle:
-            draw_tracked_text(draw, subtitle.upper(), cx, sub_y, font_sub, (212, 175, 125, 180), spacing=12)
+            max_sub_w = width - 200
+            sub_size = 18
+            sub_spacing = 10
+            while sub_size > 14:
+                f_test = get_system_font(sub_size, bold=False)
+                chars = list(subtitle.upper())
+                char_widths = [draw.textbbox((0, 0), ch, font=f_test)[2] for ch in chars]
+                curr_w = sum(char_widths) + (len(chars) - 1) * sub_spacing
+                if curr_w <= max_sub_w:
+                    break
+                sub_size -= 1
+                sub_spacing = max(4, int(10 * (sub_size / 18)))
+
+            font_sub = get_system_font(sub_size, bold=False)
+            draw_tracked_text(draw, subtitle.upper(), cx, sub_y, font_sub, (212, 175, 125, 180), spacing=sub_spacing)
             # Accent hairline
             line_w = 42
-            draw.line([(cx - line_w, sub_y + 45), (cx + line_w, sub_y + 45)], fill=(212, 175, 125, 75), width=1)
+            draw.line([(cx - line_w, sub_y + 40), (cx + line_w, sub_y + 40)], fill=(212, 175, 125, 75), width=1)
 
     return canvas

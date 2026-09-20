@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageFilter
 from .audio import load_audio, analyze_audio
 from .disc import create_vinyl_disc
 from .canvas import create_canvas
+from .lyrics import load_lyrics, LyricRenderer
 
 def render_visualizer_video(
     audio_path,
@@ -18,7 +19,8 @@ def render_visualizer_video(
     num_bars=64,
     disc_radius=260,
     progress_callback=None,
-    motion_config=None
+    motion_config=None,
+    lyrics=None
 ):
     """
     Renders an audio-reactive visualizer video streamed directly into FFmpeg.
@@ -58,6 +60,18 @@ def render_visualizer_video(
 
     # Pre-position layers for fast compositing
     dest_pos = (cx - disc_radius, cy - disc_radius)
+
+    # Initialize lyric renderer if lyrics provided
+    lyric_renderer = None
+    if lyrics:
+        cues = load_lyrics(lyrics)
+        if cues:
+            y_lyric = cy + 500 if height > width else cy + 390
+            lyric_renderer = LyricRenderer(
+                cues,
+                canvas_width=width,
+                y_pos=y_lyric
+            )
 
     # 4. Setup FFmpeg streaming pipe
     ffmpeg_cmd = [
@@ -150,6 +164,23 @@ def render_visualizer_video(
                 sheen_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
                 sheen_layer.paste(vinyl_sheen, dest_pos)
                 frame = Image.alpha_composite(frame, sheen_layer)
+
+            # Composite timed lyrics overlay
+            if lyric_renderer:
+                lyric_data = lyric_renderer.get_overlay_for_time(t)
+                if lyric_data:
+                    stamp, dest_pos_l, alpha = lyric_data
+                    stamp_layer = stamp.copy()
+                    if alpha < 0.999:
+                        lut = [int(i * alpha) for i in range(256)]
+                        a_chan = stamp_layer.getchannel("A").point(lut)
+                        stamp_layer.putalpha(a_chan)
+                    try:
+                        frame.alpha_composite(stamp_layer, dest=dest_pos_l)
+                    except (TypeError, AttributeError):
+                        l_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                        l_layer.paste(stamp_layer, dest_pos_l)
+                        frame = Image.alpha_composite(frame, l_layer)
 
             proc.stdin.write(frame.tobytes())
 
